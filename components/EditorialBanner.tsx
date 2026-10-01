@@ -1,6 +1,6 @@
 import { editorial } from '@/lib/content';
 import Button from './ui/Button';
-import RatioImage from './ui/RatioImage';
+import LightboxImage from './ui/LightboxImage';
 
 export default function EditorialBanner() {
   return (
@@ -18,11 +18,12 @@ export default function EditorialBanner() {
         </div>
 
         <div className="md:-my-32 md:w-[300px] lg:w-[360px]">
-          <RatioImage
+          <LightboxImage
             image={editorial.image}
             ratio="hero"
             sizes="(min-width: 1024px) 360px, (min-width: 768px) 300px, 100vw"
-            className="rounded-card shadow-popover md:aspect-product"
+            className="rounded-card shadow-popover"
+            frameClassName="md:aspect-product"
           />
         </div>
       </div>

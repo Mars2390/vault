@@ -2,41 +2,41 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { featured, formatPrice, search } from '@/lib/content';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { productHref, searchProducts } from '@/lib/catalog';
+import { formatPrice, search } from '@/lib/content';
 import Badge from './ui/Badge';
 import { ChipButton } from './ui/Chip';
-import { SearchIcon } from './ui/Icons';
+import { ArrowRightIcon, SearchIcon } from './ui/Icons';
+import RatioImage from './ui/RatioImage';
 
 const TYPE_MS = 90;
 const DELETE_MS = 45;
 const HOLD_MS = 1400;
 const GAP_MS = 350;
-
-function matches(query: string) {
-  const q = query.trim().toLowerCase();
-  if (!q) return [];
-  return featured.products.filter((p) =>
-    `${p.title} ${p.category} ${p.mode} ${p.id}`.toLowerCase().includes(q),
-  );
-}
+const MAX_RESULTS = 5;
 
 /**
- * Header search. Filters the demo products into a popover, and types example
- * queries into the placeholder while the field is idle.
+ * Header search. Filters the catalogue into a results popover, and types
+ * example queries into the placeholder while the field is idle.
  */
 export default function SearchBox({
   className = '',
   autoFocus = false,
+  onNavigate,
 }: {
   className?: string;
   autoFocus?: boolean;
+  onNavigate?: () => void;
 }) {
   const id = useId();
+  const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
-  const results = useMemo(() => matches(query), [query]);
+  const results = useMemo(() => searchProducts(query), [query]);
   const hasQuery = query.trim().length > 0;
 
   // Typewriter placeholder. Writes straight to the DOM so typing a character
@@ -99,12 +99,23 @@ export default function SearchBox({
     };
   }, [open]);
 
+  const leave = () => {
+    setOpen(false);
+    setQuery('');
+    onNavigate?.();
+  };
+
+  // Enter goes to the best match, or to the full catalogue when nothing matches.
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (!results.length) return;
-    window.location.hash = results[0].id;
-    setOpen(false);
+    if (!hasQuery) return;
+    router.push(results.length ? productHref(results[0]) : '/products');
+    inputRef.current?.blur();
+    leave();
   };
+
+  const footerLink =
+    'flex items-center justify-between gap-12 rounded-input p-8 text-14 font-semibold text-rental-text transition-colors duration-200 ease-brand hover:bg-tint';
 
   return (
     <div ref={rootRef} className={`relative ${className}`}>
@@ -141,7 +152,7 @@ export default function SearchBox({
       </p>
 
       {open && (
-        <div className="absolute left-0 right-0 top-full z-50 mt-8 min-w-[280px] rounded-card bg-card p-8 shadow-popover md:left-auto md:w-[340px]">
+        <div className="absolute left-0 right-0 top-full z-50 mt-8 min-w-[280px] rounded-card bg-card p-8 shadow-popover md:left-auto md:w-[360px]">
           {!hasQuery && (
             <div className="p-8">
               <p className="mb-8 text-12 font-semibold text-muted">{search.popularLabel}</p>
@@ -162,33 +173,54 @@ export default function SearchBox({
           )}
 
           {hasQuery && results.length === 0 && (
-            <p className="p-8 text-14 text-muted">
-              {search.empty} “{query.trim()}”.
-            </p>
+            <>
+              <p className="p-8 text-14 text-muted">
+                {search.empty} “{query.trim()}”.
+              </p>
+              <Link href="/request" onClick={leave} className={footerLink}>
+                {search.request}
+                <ArrowRightIcon size={16} />
+              </Link>
+            </>
           )}
 
           {hasQuery && results.length > 0 && (
-            <ul>
-              {results.slice(0, 5).map((product) => (
-                <li key={product.id}>
-                  <a
-                    href={`#${product.id}`}
-                    onClick={() => setOpen(false)}
-                    className="flex items-center justify-between gap-12 rounded-input p-8 transition-colors duration-200 ease-brand hover:bg-tint"
-                  >
-                    <span className="min-w-0">
-                      <span className="block truncate text-14 font-semibold">{product.title}</span>
-                      <span className="price block text-12 text-muted">
-                        {product.mode === 'rent' && product.rentPrice
-                          ? `${formatPrice(product.rentPrice)}/${product.rentUnit} · or buy ${formatPrice(product.buyPrice)}`
-                          : formatPrice(product.buyPrice)}
+            <>
+              <ul>
+                {results.slice(0, MAX_RESULTS).map((product) => (
+                  <li key={product.slug}>
+                    <Link
+                      href={productHref(product)}
+                      onClick={leave}
+                      className="flex items-center gap-12 rounded-input p-8 transition-colors duration-200 ease-brand hover:bg-tint"
+                    >
+                      <RatioImage
+                        image={product.image}
+                        ratio="square"
+                        sizes="48px"
+                        decorative
+                        className="w-48 shrink-0 rounded-input"
+                      />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-14 font-semibold">
+                          {product.title}
+                        </span>
+                        <span className="price block truncate text-12 text-muted">
+                          {product.rentDay
+                            ? `${formatPrice(product.rentDay)}/day · or buy ${formatPrice(product.buyPrice)}`
+                            : formatPrice(product.buyPrice)}
+                        </span>
                       </span>
-                    </span>
-                    <Badge variant={product.mode}>{product.mode}</Badge>
-                  </a>
-                </li>
-              ))}
-            </ul>
+                      <Badge variant={product.mode}>{product.mode}</Badge>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              <Link href="/products" onClick={leave} className={`${footerLink} mt-4`}>
+                {search.seeAll}
+                <ArrowRightIcon size={16} />
+              </Link>
+            </>
           )}
         </div>
       )}

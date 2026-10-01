@@ -2,7 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
-import { buyOrRent } from '@/lib/content';
+import Link from 'next/link';
+import { getProduct, lowestDayRate, lowestNightRate, productHref } from '@/lib/catalog';
+import { buyOrRent, formatPrice } from '@/lib/content';
 import type { Mode } from '@/lib/content';
 import Badge from './ui/Badge';
 import Button from './ui/Button';
@@ -19,10 +21,25 @@ const bulletIcons = {
 const MODES: Mode[] = ['buy', 'rent'];
 
 export default function BuyOrRent() {
-  const { heading, body, bullets, cta, demo } = buyOrRent;
+  const { heading, body, cta, demo } = buyOrRent;
+  const product = getProduct(demo.slug)!;
   const groupRef = useRef<HTMLDivElement>(null);
   const [selected, setSelected] = useState<Mode>('rent');
   const [inView, setInView] = useState(false);
+
+  // The lowest rates come from the catalogue, so this line can never drift from the prices.
+  const bullets = [
+    {
+      icon: 'tag' as const,
+      text: `Rent from ${formatPrice(lowestDayRate)}/day or ${formatPrice(lowestNightRate)}/night`,
+    },
+    ...buyOrRent.bullets,
+  ];
+
+  const titles: Record<Mode, string> = {
+    buy: `Buy — ${formatPrice(product.buyPrice)}`,
+    rent: `Rent — ${formatPrice(product.rentDay!)}/day`,
+  };
 
   // Hold the range sweep until the demo scrolls into view, so it is seen.
   useEffect(() => {
@@ -87,79 +104,92 @@ export default function BuyOrRent() {
           </Button>
         </div>
 
-        <div
-          ref={groupRef}
-          role="radiogroup"
-          aria-label={demo.groupLabel}
-          className="grid max-w-[560px] grid-cols-2 gap-16 lg:max-w-none"
-        >
-          {MODES.map((mode) => {
-            const isSelected = selected === mode;
-            const isRent = mode === 'rent';
-            const copy = demo[mode];
-            const selectedStyle = isRent
-              ? 'border-rental-accent shadow-popover'
-              : 'border-ink shadow-popover';
+        <div className="max-w-[560px] lg:max-w-none">
+          <div
+            ref={groupRef}
+            role="radiogroup"
+            aria-label={demo.groupLabel}
+            className="grid grid-cols-2 gap-16"
+          >
+            {MODES.map((mode) => {
+              const isSelected = selected === mode;
+              const isRent = mode === 'rent';
+              const copy = demo[mode];
+              const selectedStyle = isRent
+                ? 'border-rental-accent shadow-popover'
+                : 'border-ink shadow-popover';
 
-            return (
-              <div
-                key={mode}
-                role="radio"
-                aria-checked={isSelected}
-                tabIndex={isSelected ? 0 : -1}
-                data-mode={mode}
-                onClick={() => setSelected(mode)}
-                onKeyDown={onKeyDown}
-                // Selectable, so it carries a border; the chosen card is raised by shadow alone.
-                className={`cursor-pointer overflow-hidden rounded-card border bg-card transition-[box-shadow,border-color] duration-200 ease-standard ${
-                  isSelected ? selectedStyle : 'border-hairline shadow-resting hover:shadow-hover'
-                }`}
-              >
-                <RatioImage
-                  image={demo.image}
-                  ratio="product"
-                  sizes="(min-width: 640px) 286px, 50vw"
-                />
-                <div className="p-16">
-                  <Badge variant={mode}>{copy.badge}</Badge>
-                  <p
-                    className={`price mt-8 text-16 font-semibold md:text-18 ${
-                      isRent ? 'text-rental-text' : ''
-                    }`}
-                  >
-                    {copy.title}
-                  </p>
-                  <p className="text-14 text-muted">{copy.note}</p>
+              return (
+                <div
+                  key={mode}
+                  role="radio"
+                  aria-checked={isSelected}
+                  tabIndex={isSelected ? 0 : -1}
+                  data-mode={mode}
+                  onClick={() => setSelected(mode)}
+                  onKeyDown={onKeyDown}
+                  // Selectable, so it carries a border; the chosen card is raised by shadow alone.
+                  className={`cursor-pointer overflow-hidden rounded-card border bg-card transition-[box-shadow,border-color] duration-200 ease-standard ${
+                    isSelected ? selectedStyle : 'border-hairline shadow-resting hover:shadow-hover'
+                  }`}
+                >
+                  <RatioImage
+                    image={product.image}
+                    ratio="product"
+                    sizes="(min-width: 640px) 286px, 50vw"
+                    decorative
+                  />
+                  <div className="p-16">
+                    <Badge variant={mode}>{copy.badge}</Badge>
+                    <p
+                      className={`price mt-8 text-16 font-semibold md:text-18 ${
+                        isRent ? 'text-rental-text' : ''
+                      }`}
+                    >
+                      {titles[mode]}
+                    </p>
+                    <p className="text-14 text-muted">{copy.note}</p>
 
-                  <div className="mt-12 flex h-24 items-center">
-                    {isRent ? (
-                      <div
-                        role="img"
-                        aria-label={demo.rent.rangeLabel}
-                        data-swept={isSelected && inView}
-                        style={rangeWidth as CSSProperties}
-                        className="sweep grid w-full grid-cols-7 overflow-hidden rounded-pill bg-chip"
-                      >
-                        {demo.rent.days.map((day, index) => (
-                          <span
-                            key={index}
-                            aria-hidden="true"
-                            className={`py-4 text-center text-12 font-semibold ${
-                              index < demo.rent.rangeDays ? 'text-rental-text' : 'text-muted'
-                            }`}
-                          >
-                            {day}
-                          </span>
-                        ))}
-                      </div>
-                    ) : (
-                      <Badge variant="save">{demo.buy.saving}</Badge>
-                    )}
+                    <div className="mt-12 flex h-24 items-center">
+                      {isRent ? (
+                        <div
+                          role="img"
+                          aria-label={demo.rent.rangeLabel}
+                          data-swept={isSelected && inView}
+                          style={rangeWidth as CSSProperties}
+                          className="sweep grid w-full grid-cols-7 overflow-hidden rounded-pill bg-chip"
+                        >
+                          {demo.rent.days.map((day, index) => (
+                            <span
+                              key={index}
+                              aria-hidden="true"
+                              className={`py-4 text-center text-12 font-semibold ${
+                                index < demo.rent.rangeDays ? 'text-rental-text' : 'text-muted'
+                              }`}
+                            >
+                              {day}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <Badge variant="save">
+                          Save {formatPrice(product.newPrice - product.buyPrice)}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
+
+          <Link
+            href={productHref(product)}
+            className="mt-16 inline-flex h-40 items-center gap-4 text-14 font-semibold text-rental-text transition-colors duration-200 ease-brand hover:text-rental-text-hover"
+          >
+            View the {product.title}
+            <ArrowRightIcon size={16} />
+          </Link>
         </div>
       </div>
     </section>

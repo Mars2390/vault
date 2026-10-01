@@ -1,6 +1,9 @@
 import type { CSSProperties, ReactNode } from 'react';
 import type { Metadata, Viewport } from 'next';
 import { DM_Sans, Fraunces } from 'next/font/google';
+import Footer from '@/components/Footer';
+import Header from '@/components/Header';
+import { LightboxProvider } from '@/components/Lightbox';
 import { colors, cssVariables } from '@/lib/tokens';
 import { site } from '@/lib/content';
 import './globals.css';
@@ -23,7 +26,10 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: `${site.name} — Buy it. Rent it. Own the moment.`,
+  title: {
+    default: `${site.name} — Buy it. Rent it. Own the moment.`,
+    template: `%s — ${site.name}`,
+  },
   description: site.description,
 };
 
@@ -37,15 +43,23 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       lang="en"
       className={`${fraunces.variable} ${dmSans.variable}`}
       style={cssVariables as CSSProperties}
+      // Tells Next.js to jump, not glide, to the top on route changes.
+      data-scroll-behavior="smooth"
     >
-      <body className="bg-page font-body text-ink">
+      <body className="flex min-h-screen flex-col bg-page font-body text-ink">
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-16 focus:top-16 focus:z-50 focus:rounded-button focus:bg-ink focus:px-16 focus:py-8 focus:text-14 focus:font-semibold focus:text-white"
         >
           Skip to content
         </a>
-        {children}
+        <LightboxProvider>
+          <Header />
+          <main id="main" className="flex-1">
+            {children}
+          </main>
+          <Footer />
+        </LightboxProvider>
       </body>
     </html>
   );

@@ -142,6 +142,49 @@ export const CalendarIcon = (props: IconProps) => (
   </Svg>
 );
 
+export const ExpandIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7" />
+  </Svg>
+);
+
+export const HeartIcon = ({ filled = false, ...props }: IconProps & { filled?: boolean }) => (
+  <Svg {...props} fill={filled ? 'currentColor' : 'none'}>
+    <path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7a4.3 4.3 0 0 1 7.5 2.800C19.500 15.400 12 20 12 20z" />
+  </Svg>
+);
+
+export const PlusIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M12 5v14M5 12h14" />
+  </Svg>
+);
+
+export const MinusIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M5 12h14" />
+  </Svg>
+);
+
+export const ChevronDownIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="m5 9 7 7 7-7" />
+  </Svg>
+);
+
+export const FilterIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <path d="M4 7h16M7 12h10M10 17h4" />
+  </Svg>
+);
+
+export const MailIcon = (props: IconProps) => (
+  <Svg {...props}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="m4 7 8 6 8-6" />
+  </Svg>
+);
+
 /** Shield silhouette used as the light grey backing in the trust strip. */
 export const ShieldShape = ({ size = 48, ...props }: IconProps) => (
   <svg

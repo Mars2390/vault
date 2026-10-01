@@ -32,9 +32,25 @@
     outline-offset: 2px;
   }
 
-  /* The cobalt ring disappears on cobalt surfaces, so flip it to white there. */
-  .on-cobalt :focus-visible {
+  /* The cobalt ring disappears on cobalt and dark surfaces, so flip it to white there. */
+  .on-cobalt :focus-visible,
+  .on-dark :focus-visible {
     outline-color: var(--white);
+  }
+
+  /* For targets inside a clipped card, where an outer ring would be cut off. */
+  .focus-inset:focus-visible {
+    outline-offset: -2px;
+  }
+
+  /* Disclosure rows on the FAQ and filter panels draw their own marker. */
+  summary {
+    cursor: pointer;
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
   }
 
   ::selection {
@@ -100,6 +116,35 @@
     transform: scaleX(1);
   }
 
+  /*
+   * Full-screen native <dialog>, used by the lightbox and the request modal.
+   * The dialog itself is the scrim, so a click on it counts as "outside".
+   */
+  .modal {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    max-height: none;
+    margin: 0;
+    border: 0;
+    padding: 0;
+    overflow: auto;
+    overscroll-behavior: contain;
+    background: var(--backdrop);
+    color: var(--ink);
+  }
+
+  .modal[open] {
+    display: flex;
+    animation: modal-in var(--dur-fast) var(--ease-out);
+  }
+
+  .modal::backdrop {
+    background: transparent;
+  }
+
   .no-scrollbar {
     scrollbar-width: none;
   }
@@ -115,6 +160,15 @@
   }
   to {
     background-position: 0 0;
+  }
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

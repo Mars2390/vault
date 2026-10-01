@@ -20,6 +20,8 @@ export const colors = {
   tint: '#F2F3F7',
   chip: '#EDEFF3',
   chipHover: '#D8D9DF',
+  periwinkle: '#E6EAFF', // trust panels on the product page
+  backdrop: 'rgba(17, 15, 21, 0.85)', // lightbox and modal scrim
 
   // Brand accent
   cobalt: '#2F4BFF',

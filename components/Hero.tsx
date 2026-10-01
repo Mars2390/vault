@@ -2,7 +2,7 @@ import { hero } from '@/lib/content';
 import Button from './ui/Button';
 import Chip from './ui/Chip';
 import { CheckIcon } from './ui/Icons';
-import RatioImage from './ui/RatioImage';
+import LightboxImage from './ui/LightboxImage';
 
 export default function Hero() {
   return (
@@ -36,7 +36,7 @@ export default function Hero() {
           </ul>
         </div>
 
-        <RatioImage
+        <LightboxImage
           image={hero.image}
           ratio="hero"
           sizes="(min-width: 1280px) 588px, (min-width: 1024px) 50vw, 100vw"
