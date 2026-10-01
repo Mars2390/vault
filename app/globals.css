@@ -1,0 +1,142 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Colours, shadows and easings arrive as CSS variables on <html>, written by
+ * app/layout.tsx from lib/tokens.ts. This file must only reference var(--…).
+ */
+
+@layer base {
+  html {
+    background: var(--page);
+    color: var(--ink);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100vh;
+    font-size: 16px;
+    line-height: 24px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Anchored sections clear the sticky header. */
+  [id] {
+    scroll-margin-top: 128px;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--focus);
+    outline-offset: 2px;
+  }
+
+  /* The cobalt ring disappears on cobalt surfaces, so flip it to white there. */
+  .on-cobalt :focus-visible {
+    outline-color: var(--white);
+  }
+
+  ::selection {
+    background: var(--rental-fill);
+    color: var(--ink);
+  }
+}
+
+@layer components {
+  /* Fraunces: weight 600, SOFT axis 100. Hero and section punchlines only. */
+  .font-display {
+    font-family: var(--font-display), Georgia, serif;
+    font-weight: 600;
+    font-variation-settings: 'SOFT' 100;
+    letter-spacing: 0;
+  }
+
+  .price {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Image placeholder while next/image is still loading. */
+  .skeleton {
+    background-image: linear-gradient(
+      90deg,
+      var(--chip) 25%,
+      var(--tint) 37%,
+      var(--chip) 63%
+    );
+    background-size: 400% 100%;
+    animation: shimmer var(--dur-shimmer) linear infinite;
+  }
+
+  /*
+   * Signature moment: a fill sweeps left to right, like a date range being
+   * selected. Fires when a rental card (or the element itself) is hovered or
+   * focused, or when data-swept="true" is set from script.
+   */
+  .sweep {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .sweep::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: var(--sweep-width, 100%);
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--sweep-color, var(--rental-fill));
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--dur-slow) var(--ease-standard);
+  }
+
+  .sweep:hover::before,
+  .sweep[data-swept='true']::before,
+  .sweep-trigger:hover .sweep::before,
+  .sweep-trigger:focus-within .sweep::before {
+    transform: scaleX(1);
+  }
+
+  .no-scrollbar {
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Reduced motion: every animation and transition lands on its final state at once. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0s !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton {
+    animation: none !important;
+  }
+}
